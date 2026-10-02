@@ -135,72 +135,17 @@ export struct CameraView {
 
   private applyZoom(ratio: number): void {
     const clamped = Math.max(this.minZoom, Math.min(this.maxZoom, ratio));
-    this.session?.setZoomRatio(clamped);
+    this.zoomRatio = Number(clamped.toFixed(2));
+    this.session?.setZoomRatio(this.zoomRatio);
     this.showZoomIndicator();
   }
 
-  private zoomPresets(): number[] {
-    const candidates: number[] = [0.6, 1.0, 2.0, 3.0, 5.0];
-    const result: number[] = [];
-    for (let i = 0; i < candidates.length; i++) {
-      const p = candidates[i];
-      if (p >= this.minZoom && p <= this.maxZoom) {
-        result.push(p);
-      }
-    }
-    if (result.length === 0) {
-      result.push(1.0);
-    }
-    return result;
-  }
-
   private formatZoom(ratio: number): string {
-    return ratio % 1 === 0 ? `${ratio.toFixed(0)}×` : `${ratio.toFixed(1)}×`;
+    return `${ratio.toFixed(1)}×`;
   }
 
   private previewWidth(): number {
     return Math.max(this.viewportWidth, this.viewportHeight * this.previewRatio);
-  }
-
-  @Builder
-  private zoomBar() {
-    Row({ space: 8 }) {
-      ForEach(this.zoomPresets(), (preset: number) => {
-        Button(this.formatZoom(preset), { type: ButtonType.Normal })
-          .fontSize(12)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(Math.abs(this.zoomRatio - preset) < 0.15 ? Theme.INK : Theme.CARD)
-          .backgroundColor(Math.abs(this.zoomRatio - preset) < 0.15 ? Theme.CARD : '#4D332F29')
-          .height(28)
-          .padding({ left: 10, right: 10, top: 0, bottom: 0 })
-          .borderRadius(14)
-          .enabled(this.ready && !this.busy)
-          .onClick(() => {
-            this.applyZoom(preset);
-            this.scheduleHideZoomIndicator();
-          })
-          .accessibilityText(`放大倍数 ${this.formatZoom(preset)}`)
-      }, (preset: number) => preset.toString())
-    }
-    .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-    .backgroundColor('#66332F29')
-    .borderRadius(Theme.TOOL_RADIUS)
-    .gesture(
-      PanGesture({ direction: PanDirection.Horizontal })
-        .onActionStart(() => {
-          if (!this.ready || this.busy) { return; }
-          this.baseZoom = this.zoomRatio;
-          this.showZoomIndicator();
-        })
-        .onActionUpdate((event: GestureEvent) => {
-          if (!this.ready || this.busy) { return; }
-          const span = Math.max(1, this.maxZoom - this.minZoom);
-          const delta = (event.offsetX / 160) * span;
-          this.applyZoom(this.baseZoom + delta);
-        })
-        .onActionEnd(() => { this.scheduleHideZoomIndicator(); })
-        .onActionCancel(() => { this.scheduleHideZoomIndicator(); })
-    )
   }
 
   @Builder
@@ -240,18 +185,16 @@ export struct CameraView {
           }.padding(20).width('100%').backgroundColor('#99332F29').borderRadius(Theme.TOOL_RADIUS)
         }
         Blank()
-        if (this.ready && this.isZooming) {
+        if (this.isZooming && this.message.length === 0) {
           Text(this.formatZoom(this.zoomRatio))
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
             .fontColor(Theme.CARD)
-            .padding({ left: 14, right: 14, top: 6, bottom: 6 })
-            .backgroundColor('#CC332F29')
+            .padding({ left: 16, right: 16, top: 6, bottom: 6 })
+            .backgroundColor('#99332F29')
             .borderRadius(16)
-            .margin({ bottom: 8 })
-        }
-        if (this.ready) {
-          this.zoomBar()
+            .margin({ bottom: 12 })
+            .accessibilityText(`当前变焦倍数 ${this.formatZoom(this.zoomRatio)}`)
         }
         Row({ space: 4 }) {
           Button(`闪光 ${this.flash}`, { type: ButtonType.Normal }).attributeModifier(new PaperActionStyle('camera'))
@@ -268,33 +211,18 @@ export struct CameraView {
       }.width('100%').height('100%').padding(20)
     }.width('100%').layoutWeight(1).backgroundColor(Theme.INK).borderRadius(Theme.CARD_RADIUS).clip(true)
       .gesture(
-        GestureGroup(GestureMode.Parallel,
-          PinchGesture({ fingers: 2 })
-            .onActionStart(() => {
-              if (!this.ready || this.busy) { return; }
-              this.baseZoom = this.zoomRatio;
-              this.showZoomIndicator();
-            })
-            .onActionUpdate((event: GestureEvent) => {
-              if (!this.ready || this.busy) { return; }
-              this.applyZoom(this.baseZoom * event.scale);
-            })
-            .onActionEnd(() => { this.scheduleHideZoomIndicator(); })
-            .onActionCancel(() => { this.scheduleHideZoomIndicator(); }),
-          PanGesture({ direction: PanDirection.Vertical })
-            .onActionStart(() => {
-              if (!this.ready || this.busy) { return; }
-              this.baseZoom = this.zoomRatio;
-              this.showZoomIndicator();
-            })
-            .onActionUpdate((event: GestureEvent) => {
-              if (!this.ready || this.busy) { return; }
-              const delta = -event.offsetY / 140;
-              this.applyZoom(this.baseZoom + delta);
-            })
-            .onActionEnd(() => { this.scheduleHideZoomIndicator(); })
-            .onActionCancel(() => { this.scheduleHideZoomIndicator(); })
-        )
+        PinchGesture({ fingers: 2 })
+          .onActionStart(() => {
+            if (!this.ready || this.busy) { return; }
+            this.baseZoom = this.zoomRatio;
+            this.showZoomIndicator();
+          })
+          .onActionUpdate((event: GestureEvent) => {
+            if (!this.ready || this.busy) { return; }
+            this.applyZoom(this.baseZoom * event.scale);
+          })
+          .onActionEnd(() => { this.scheduleHideZoomIndicator(); })
+          .onActionCancel(() => { this.scheduleHideZoomIndicator(); })
       )
       .onAreaChange((_old, area) => {
         // Fill the viewfinder bounds, not the whole page including its paper controls.

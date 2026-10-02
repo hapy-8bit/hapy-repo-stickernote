@@ -152,22 +152,19 @@ export struct DayCanvas {
       Row({ space: 4 }) {
         Text(`${DateTools.parse(this.date()).getFullYear()} 年 ${DateTools.parse(this.date()).getMonth() + 1} 月`)
           .attributeModifier(new PaperCaptionStyle()).layoutWeight(1)
-        Button({ type: ButtonType.Normal }) {
-          Row({ space: 4 }) {
-            Text('月历').attributeModifier(new PaperCaptionStyle())
-            SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(12).fontColor([Theme.MUTED])
-          }
-        }.height(Theme.CONTROL_HEIGHT).padding({ left: 10, right: 10 }).backgroundColor(Color.Transparent)
-          .enabled(!this.loading && !this.busy).onClick((): void => this.onCalendar())
-          .accessibilityText('选择日期与回看')
         if (this.editing) {
           Button('完成', { type: ButtonType.Normal }).attributeModifier(new PaperActionStyle('primary'))
             .enabled(!this.busy).onClick((): void => this.onFinishLayout())
         } else {
           Button({ type: ButtonType.Normal }) {
-            SymbolGlyph($r('sys.symbol.gearshape')).fontSize(Theme.SMALL_ICON_SIZE).fontColor([Theme.MUTED])
-          }.attributeModifier(new PaperIconStyle()).enabled(!this.busy).accessibilityText('设置')
-            .onClick((): void => this.onSettings())
+            Row({ space: 4 }) {
+              SymbolGlyph($r('sys.symbol.calendar')).fontSize(Theme.SMALL_ICON_SIZE).fontColor([Theme.INK])
+              Text('月历').fontSize(Theme.CAPTION_SIZE).fontColor(Theme.INK).fontWeight(FontWeight.Medium)
+            }
+          }.height(Theme.CONTROL_HEIGHT).padding({ left: 12, right: 12 })
+            .backgroundColor(Theme.SOFT).borderRadius(Theme.CONTROL_RADIUS)
+            .enabled(!this.loading && !this.busy).accessibilityText('月历，选择日期与回看')
+            .onClick((): void => this.onCalendar())
         }
       }.width('100%').height(Theme.CONTROL_HEIGHT)
     }.width('100%').padding({ left: Theme.PAGE_GUTTER, right: Theme.PAGE_GUTTER, top: 20, bottom: 4 })

@@ -441,7 +441,7 @@ struct Index {
         .hitTestBehavior(this.switching() ? HitTestMode.None : HitTestMode.Default)
       MainDock({ selectedTab: this.tab, disabled: this.busy || this.loading || this.switching() || this.errorMessage.length > 0,
         paperColor: this.paper(), onToday: (): void => this.selectTab('today', true),
-        onAdd: (): void => this.openAddSheet(), onLibrary: (): void => this.selectTab('library') })
+        onAdd: (): void => this.openCamera(), onLibrary: (): void => this.selectTab('library') })
     }.width('100%').height('100%')
   }
   @Builder

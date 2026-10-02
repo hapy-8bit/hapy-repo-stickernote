@@ -116,6 +116,7 @@ export class CameraSession {
     if (!Number.isFinite(ratio)) { return; }
     const clamped = Math.max(this.state.minZoom, Math.min(this.state.maxZoom, ratio));
     const rounded = Number(clamped.toFixed(2));
+    if (Math.abs(this.state.zoomRatio - rounded) < 0.02) { return; }
     try {
       this.session.setZoomRatio(rounded);
       this.state.zoomRatio = rounded;
@@ -249,6 +250,7 @@ export class CameraSession {
       this.preview.on('frameStart', (error: BusinessError) => {
         if (!this.running || generation !== this.epoch ||
           (error !== undefined && error !== null && error.code !== 0)) { return; }
+        if (this.state.ready) { return; }
         if (this.firstFrameTimer !== -1) { clearTimeout(this.firstFrameTimer); this.firstFrameTimer = -1; }
         this.state.ready = true;
         this.state.message = '';
@@ -285,9 +287,10 @@ export class CameraSession {
       }
       if (!this.running || generation !== this.epoch) { await this.releaseResources(); return; }
       await this.session.start();
-      if (!this.state.ready && this.running && generation === this.epoch) {
-        this.firstFrameTimer = setTimeout(() => { this.handleCameraFailure(generation); }, 10000);
-      }
+      if (!this.running || generation !== this.epoch) { await this.releaseResources(); return; }
+      this.state.ready = true;
+      this.state.message = '';
+      if (this.firstFrameTimer !== -1) { clearTimeout(this.firstFrameTimer); this.firstFrameTimer = -1; }
       this.publish();
     } catch (error) {
       await this.releaseResources();
