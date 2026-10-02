@@ -1,0 +1,16 @@
+/build-profile.json5
+local.properties
+.local/
+.idea/
+.hvigor/
+build/
+entry/build/
+oh_modules/
+entry/oh_modules/
+node_modules/
+*.p7b
+*.p12
+*.cer
+*.log
+.DS_Store
+.obsidian/

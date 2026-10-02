@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "本地贴纸手帐"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "每日贴纸"
+    },
+    {
+      "name": "camera_permission_reason",
+      "value": "用于拍摄照片并制作贴纸，仅在你点击拍照时使用相机。"
+    }
+  ]
+}
